@@ -17,22 +17,26 @@ def dirlist(path):
             if matchFlle(fileabsoulutepath):
                 findImage(fileabsoulutepath)
             elif assertsIsInbundle == 0:
-                if matchImage(fileabsoulutepath):
-                    findimageSet.add(fileabsoulutepath)
+                retult = matchImage(fileabsoulutepath)
+                if retult:
+                    findimageSet.add(retult)
 
 
 import re
 #这个是匹配 .m 文件
 def matchFlle(fileName):
-
-    if re.match(matchFlie,fileName):
+    list = re.match(matchFlie, fileName)
+    if list[0]:
         return True
     else:
         return False
 
 #这个是匹配资源文件
 def matchImage(filename):
-    return re.match(matchResourceFile,filename)
+    list = re.match(matchResourceFile, filename)
+    if list:
+        return list[0][0]
+    return None
 
 
 #从文件中读取内容然后做一个正则匹配
@@ -41,10 +45,10 @@ def findImage(filename):
         filecontent = file.read()
         #这里就需要根据项目的不同进行个性化的设置了
         results = re.findall(matchImageMatcher, filecontent)
-        if results.count() > 0:
-            for imageName in results:
-                # 找到的时候的情况
-                assertimageSet.add(imageName)
+        for imagesResult in results:
+            for imageString in imagesResult:
+                if imagesResult:
+                    assertimageSet.add(imageString)
 
 #比较  找出没有被使用的图片
 def getUnusedImage():
@@ -63,38 +67,28 @@ if __name__ == '__main__':
     import re
     import os
     #在这里提前注入要需要处理的所有正则匹配
-    matchFlie = re.compile(r'[.]m$')
-
-    # 这个是查找资源文件的方案
-    # print('如果你的项目中加入时候加入 png 或者 jpg 传入1 如果不带传入 0')
-    # searchType = input('please input you project search wheather with suffix png or jpp:')
-    # matchResourceFile = ''
-    # if searchType :
-    #     matchResourceFile = re.compile(r'[\.](png|jpg)$')
-    # else:
-    matchResourceFile = re.compile(r'([*]+)[\.](png|jpg)$')
+    matchFlie = re.compile(r'(.+?)[\.]m$')
+    matchResourceFile = re.compile(r'(.+?)[\.](jpg|png)')
 
     # 根据个人项目传入正则匹配的方案 如果需要根据业务自定义正则匹配传入对应的 python 格式正则即可
-
-    print('if you need extra config image match scheme based on your project ，you need input 1 otherwise input 0')
-
+    print('下边是设置图片超找方案的选项，如果项目中自定义了宏或者进行了封装，就需要自定义正则匹配规则')
     matchImageMatcher = ''
-    imageSearchScheme = input('please input you image match config:')
+    imageSearchScheme = input('设置图片匹配原则，系统方法传入0，自定义方法或者宏传入1:')
     if imageSearchScheme :
-        print('next you need input image match scheme as r\'*.img\'')
-        otherSearchScheme = input('please input your image match scheme:')
+        # 只有上一步传入的为 1 才会走这个方法
+        print('接下来设置你的图片的正则匹配方案 PS:这里切记传入的正则一定是非贪婪的 否则查找结果不准确')
+        otherSearchScheme = input('请输入你的正则匹配方案:')
         matchImageMatcher = re.compile(otherSearchScheme)
     else:
         #常见的系统方法匹配方案
-        matchImageMatcher = re.compile(r'pathForResource:@"([*])"|imageWithNamed:@"([*]+)"');
+        matchImageMatcher = re.compile(r'pathForResource:@"(.*?)"|imageWithNamed:@"(.*?)"')
 
-    projectfilepath = input('please input your project absoulute path:').strip()
+    projectfilepath = input('请输入你项目的完整路径:').strip()
 
     # 判断是否需要 bundle 的模式去检测  如果是 bundle 传入 1 否则传入 0
-    assertsIsInbundle = input('if you asserts in bundle please input 1 else input 0:')
-
+    assertsIsInbundle = input('如果你的图片存储在 bundle 中 无法直接读取，如果在 bundle 中传 1 在 Asserts 或者 本地文件夹中传 0 即可')
     if assertsIsInbundle == 1:
-        assertsPath = input('please input in you bundle or imageResource absolute path:')
+        assertsPath = input('请输入本地图片 bundle 的完整路径:').strip()
         dirlist(assertsPath)
 
     main()
